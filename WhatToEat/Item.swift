@@ -10,9 +10,23 @@ import SwiftData
 
 @Model
 final class Item {
-    var timestamp: Date
+    @Attribute(.unique) var restaurant: String
+    @Relationship var tags: [ItemTags]
     
-    init(timestamp: Date) {
-        self.timestamp = timestamp
+    init(restaurant: String, tags: [ItemTags] = []) {
+        self.restaurant = restaurant
+        self.tags = tags
+    }
+}
+
+
+@Model
+final class ItemTags: Identifiable {
+    @Attribute(.unique) var tag: String
+    @Relationship(inverse: \Item.tags) var items: [Item]
+    
+    init(tag: String, items: [Item] = []) {
+        self.tag = tag
+        self.items = items
     }
 }
