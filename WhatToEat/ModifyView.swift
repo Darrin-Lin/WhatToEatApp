@@ -17,7 +17,7 @@ struct ModifyView: View {
     @State private var restaurant_name: String = ""
     @State private var selectedTags: Set<ItemTags> = []
     @State private var newTag: String = ""
-
+    
     var body: some View {
         NavigationSplitView {
             List {
@@ -70,31 +70,30 @@ struct ModifyView: View {
                     TextField("Restaurant", text: $restaurant_name)
                         .padding()
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
-
-                    VStack {
-                        Text("Select tags")
-                            .font(.headline)
-                        ForEach(tag_list) { tag in
-                            HStack {
-                                Text(tag.tag)
-                                Spacer()
-                                if selectedTags.contains(tag) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.blue)
-                                } else {
-                                    Image(systemName: "circle")
+                    Text("Select tags").font(.headline)
+                    ScrollView {
+                        VStack {
+                            ForEach(tag_list) { tag in
+                                HStack {
+                                    Text(tag.tag)
+                                    Spacer()
+                                    if selectedTags.contains(tag) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.blue)
+                                    } else {
+                                        Image(systemName: "circle")
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if selectedTags.contains(tag) {
+                                        selectedTags.remove(tag)
+                                    } else {
+                                        selectedTags.insert(tag)
+                                    }
                                 }
                             }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                if selectedTags.contains(tag) {
-                                    selectedTags.remove(tag)
-                                } else {
-                                    selectedTags.insert(tag)
-                                }
-                            }
-                        }
+                        }.frame(maxHeight: 1000)
                     }
                     .padding()
                     
@@ -126,7 +125,7 @@ struct ModifyView: View {
             Text("Select an item")
         }
     }
-
+    
     private func addItem(restaurant: String, tags: [ItemTags]) {
         withAnimation {
             let newItem = Item(restaurant: restaurant, tags: tags)
@@ -138,7 +137,7 @@ struct ModifyView: View {
             selectedTags.removeAll()
         }
     }
-
+    
     private func addNewTag(tag: String) {
         withAnimation {
             if !tag_list.contains(where: { $0.tag == tag }) && !tag.isEmpty {
@@ -147,7 +146,7 @@ struct ModifyView: View {
             }
         }
     }
-
+    
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
