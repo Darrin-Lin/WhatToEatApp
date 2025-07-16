@@ -24,7 +24,7 @@ struct ModifyView: View {
                 Section(header: Text("restaurants")){
                     ForEach(items) { item in
                         NavigationLink {
-                            Text("Item at \(item.restaurant)")
+                            RestaurantDetailView(restaurant: item)
                         } label: {
                             Text(item.restaurant)
                         }
@@ -150,29 +150,123 @@ struct ModifyView: View {
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
-                for i in tag_list {
-                    if let idx = i.items.firstIndex(of: items[index]){
-                        i.items.remove(at: idx)
+                let itemToDelete = items[index]
+                for tag in tag_list {
+                    if let idx = tag.items.firstIndex(of: itemToDelete) {
+                        tag.items.remove(at: idx)
+                        modelContext.insert(tag)
                     }
                 }
+                modelContext.delete(itemToDelete)
             }
         }
     }
     
     private func deleteTags(offsets: IndexSet) {
         withAnimation {
-            for index in offsets{
-                modelContext.delete(tag_list[index])
-                for i in items {
-                    if let idx = i.tags.firstIndex(of: tag_list[index]){
-                        i.tags.remove(at: idx)
+            for index in offsets {
+                let tagToDelete = tag_list[index]
+                for item in items {
+                    if let idx = item.tags.firstIndex(of: tagToDelete) {
+                        item.tags.remove(at: idx)
+                        modelContext.insert(item)
                     }
                 }
+                modelContext.delete(tagToDelete)
             }
         }
     }
 }
+
+struct RestaurantDetailView: View {
+    @Environment(\.modelContext) private var modelContext
+    
+    @Bindable var restaurant: Item
+    @Query private var allTags: [ItemTags]
+    @State private var selectedTag: ItemTags? = nil
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Tags for \(restaurant.restaurant):")
+                .font(.headline)
+            
+            let columns = [GridItem(.flexible()), GridItem(.flexible())]
+            ScrollView {
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+                    ForEach(restaurant.tags, id: \.tag) { tag in
+                        Text(tag.tag)
+                            .padding(6)
+                            .background(Color.blue.opacity(0.2))
+                            .foregroundColor(.blue)
+                            .cornerRadius(6)
+                            .onLongPressGesture {
+                                removeTag(tag)
+                            }
+                    }
+                }.padding()
+            }
+            .frame(maxHeight: 200)
+            Divider()
+            
+            let availableTags = allTags.filter { !restaurant.tags.contains($0) }
+            
+            if availableTags.isEmpty {
+                Text("No tags available to add")
+                    .foregroundColor(.gray)
+            } else {
+                HStack {
+                    Menu {
+                        ForEach(availableTags, id: \.tag) { tag in
+                            Button(tag.tag) {
+                                selectedTag = tag
+                            }
+                        }
+                    } label: {
+                        Text(selectedTag?.tag ?? "Select tag to add")
+                            .padding(8)
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(6)
+                    }
+                    
+                    Button("Add") {
+                        if let tag = selectedTag {
+                            addTag(tag)
+                            selectedTag = nil
+                        }
+                    }
+                    .disabled(selectedTag == nil)
+                    .padding(.leading)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .navigationTitle(restaurant.restaurant)
+    }
+    
+    private func addTag(_ tag: ItemTags) {
+        restaurant.tags.append(tag)
+        tag.items.append(restaurant)
+        
+        modelContext.insert(restaurant)
+        modelContext.insert(tag)
+    }
+    private func removeTag(_ tag: ItemTags) {
+        withAnimation {
+            if let index = restaurant.tags.firstIndex(of: tag) {
+                restaurant.tags.remove(at: index)
+            }
+            if let index = tag.items.firstIndex(of: restaurant) {
+                tag.items.remove(at: index)
+            }
+            
+            modelContext.insert(restaurant)
+            modelContext.insert(tag)
+        }
+    }
+}
+
 
 #Preview {
     ContentView()
