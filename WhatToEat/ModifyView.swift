@@ -10,7 +10,7 @@ import SwiftData
 
 struct ModifyView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Query var items: [Item]
     @Query private var tag_list: [ItemTags]
     @State private var showingAddItemSheet = false
     @State private var showingAddTagSheet = false

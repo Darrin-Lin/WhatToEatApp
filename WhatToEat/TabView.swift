@@ -15,6 +15,10 @@ struct ContentView: View {
                 .tabItem {
                     Label("Modify", systemImage: "slider.horizontal.3")
                 }
+            ChooseView()
+                .tabItem {
+                    Label("Choose", systemImage: "square.and.arrow.up")
+                }
         }
     }
 }
