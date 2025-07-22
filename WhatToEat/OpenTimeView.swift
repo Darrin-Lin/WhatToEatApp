@@ -1,5 +1,5 @@
 //
-//  OpentimeView.swift
+//  OpenTimeView.swift
 //  WhatToEat
 //
 //  Created by Darrin Lin on 2025/7/22.
