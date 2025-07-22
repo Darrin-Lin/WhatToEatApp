@@ -15,120 +15,131 @@ struct ModifyView: View {
     @State private var showingAddItemSheet = false
     @State private var showingAddTagSheet = false
     @State private var restaurant_name: String = ""
+    @State private var price: (min:Int, max:Int) = (0,0)
+    @State private var selectedDays: UInt8 = 0b1111111
+    @State private var rating: UInt8 = 0
     @State private var selectedTags: Set<ItemTags> = []
     @State private var newTag: String = ""
-    
+
     var body: some View {
         NavigationSplitView {
-            List {
-                Section(header: Text("restaurants")){
-                    ForEach(items) { item in
-                        NavigationLink {
-                            RestaurantDetailView(restaurant: item)
-                        } label: {
-                            Text(item.restaurant)
-                        }
-                    }
-                    .onDelete(perform: deleteItems)
-                }
-                
-                Section(header: Text("tags")){
-                    ForEach(tag_list) { tag_item in
-                        NavigationLink {
-                            Section(header: Text("used by \(tag_item.items.count) restaurants")){
-                                List {
-                                    ForEach(tag_item.items) { item in
-                                        Text(item.restaurant)
-                                    }
-                                }
-                            }
-                        } label: {
-                            Text(tag_item.tag)
-                        }
-                    }
-                    .onDelete(perform: deleteTags)
-                }
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: { showingAddItemSheet.toggle() }) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-                ToolbarItem {
-                    Button(action: { showingAddTagSheet.toggle() }) {
-                        Label("Add Tag", systemImage: "tag.fill")
-                    }
-                }
-                
-            }
-            .sheet(isPresented: $showingAddItemSheet) {
-                VStack {
-                    TextField("Restaurant", text: $restaurant_name)
-                        .padding()
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Text("Select tags").font(.headline)
-                    ScrollView {
-                        VStack {
-                            ForEach(tag_list) { tag in
-                                HStack {
-                                    Text(tag.tag)
-                                    Spacer()
-                                    if selectedTags.contains(tag) {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.blue)
-                                    } else {
-                                        Image(systemName: "circle")
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    if selectedTags.contains(tag) {
-                                        selectedTags.remove(tag)
-                                    } else {
-                                        selectedTags.insert(tag)
-                                    }
-                                }
-                            }
-                        }.frame(maxHeight: 1000)
-                    }
-                    .padding()
-                    
-                    Button("Add Restaurant") {
-                        addItem(restaurant: restaurant_name, tags: Array(selectedTags))
-                        showingAddItemSheet = false
-                    }
-                    .padding()
-                }
-                .padding()
-            }
-            
-            .sheet(isPresented: $showingAddTagSheet) {
-                VStack {
-                    TextField("New tag", text: $newTag)
-                        .padding()
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                    
-                    Button("Add Tag") {
-                        addNewTag(tag: newTag)
-                        newTag = ""
-                        showingAddTagSheet = false
-                    }
-                    .padding()
-                }
-                .padding()
-            }
+            itemListView
         } detail: {
             Text("Select an item")
         }
     }
-    
-    private func addItem(restaurant: String, tags: [ItemTags]) {
+
+    @ViewBuilder
+    var itemListView: some View {
+        List {
+            restaurantSection
+            tagSection
+        }
+        .toolbar {
+            toolbarContent
+        }
+        .sheet(isPresented: $showingAddItemSheet) {
+            addRestaurantSheet
+        }
+        .sheet(isPresented: $showingAddTagSheet) {
+            addTagSheet
+        }
+    }
+
+    @ViewBuilder
+    var restaurantSection: some View {
+        Section(header: Text("restaurants")) {
+            ForEach(items) { item in
+                NavigationLink {
+                    RestaurantDetailView(restaurant: item)
+                } label: {
+                    Text(item.restaurant)
+                }
+            }
+            .onDelete(perform: deleteItems)
+        }
+    }
+
+    @ViewBuilder
+    var tagSection: some View {
+        Section(header: Text("tags")) {
+            ForEach(tag_list) { tag_item in
+                NavigationLink {
+                    Section(header: Text("used by \(tag_item.items.count) restaurants")) {
+                        List {
+                            ForEach(tag_item.items) { item in
+                                Text(item.restaurant)
+                            }
+                        }
+                    }
+                } label: {
+                    Text(tag_item.tag)
+                }
+            }
+            .onDelete(perform: deleteTags)
+        }
+    }
+
+    @ToolbarContentBuilder
+    var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            EditButton()
+        }
+        ToolbarItem {
+            Button(action: { showingAddItemSheet.toggle() }) {
+                Label("Add Item", systemImage: "plus")
+            }
+        }
+        ToolbarItem {
+            Button(action: { showingAddTagSheet.toggle() }) {
+                Label("Add Tag", systemImage: "tag.fill")
+            }
+        }
+    }
+
+    @ViewBuilder
+    var addRestaurantSheet: some View {
+        RestaurantSheetView(
+            restaurantName: $restaurant_name,
+            price: $price,
+            selectedDays: $selectedDays,
+            rating: $rating,
+            selectedTags: $selectedTags,
+            tagList: tag_list,
+            onAdd: {
+                addRestaurant(
+                    restaurant: restaurant_name,
+                    tags: Array(selectedTags),
+                    lowestPrice: price.min,
+                    highestPrice: price.max,
+                    openBit: selectedDays,
+                    rating0to10: UInt8(rating)
+                )
+                showingAddItemSheet = false
+            }
+        )
+    }
+
+    @ViewBuilder
+    var addTagSheet: some View {
+        VStack {
+            TextField("New tag", text: $newTag)
+                .padding()
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            Button("Add Tag") {
+                addNewTag(tag: newTag)
+                newTag = ""
+                showingAddTagSheet = false
+            }
+            .padding()
+        }
+        .padding()
+    }
+
+    private func addRestaurant(restaurant: String, tags: [ItemTags], lowestPrice:Int, highestPrice: Int, openBit: UInt8, rating0to10: UInt8 ) {
         withAnimation {
-            let newItem = Item(restaurant: restaurant, tags: tags)
+            let newItem = Item(restaurant: restaurant, tags: tags, lowestPrice:lowestPrice, highestPrice: highestPrice, openBit: openBit, rating0to10: rating0to10 )
             modelContext.insert(newItem)
             for tag in tags {
                 tag.items.append(newItem)
@@ -137,7 +148,7 @@ struct ModifyView: View {
             selectedTags.removeAll()
         }
     }
-    
+
     private func addNewTag(tag: String) {
         withAnimation {
             if !tag_list.contains(where: { $0.tag == tag }) && !tag.isEmpty {
@@ -146,7 +157,7 @@ struct ModifyView: View {
             }
         }
     }
-    
+
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -161,7 +172,7 @@ struct ModifyView: View {
             }
         }
     }
-    
+
     private func deleteTags(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -177,96 +188,6 @@ struct ModifyView: View {
         }
     }
 }
-
-struct RestaurantDetailView: View {
-    @Environment(\.modelContext) private var modelContext
-    
-    @Bindable var restaurant: Item
-    @Query private var allTags: [ItemTags]
-    @State private var selectedTag: ItemTags? = nil
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Tags for \(restaurant.restaurant):")
-                .font(.headline)
-            
-            let columns = [GridItem(.flexible()), GridItem(.flexible())]
-            ScrollView {
-                LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
-                    ForEach(restaurant.tags, id: \.tag) { tag in
-                        Text(tag.tag)
-                            .padding(6)
-                            .background(Color.blue.opacity(0.2))
-                            .foregroundColor(.blue)
-                            .cornerRadius(6)
-                            .onLongPressGesture {
-                                removeTag(tag)
-                            }
-                    }
-                }.padding()
-            }
-            .frame(maxHeight: 200)
-            Divider()
-            
-            let availableTags = allTags.filter { !restaurant.tags.contains($0) }
-            
-            if availableTags.isEmpty {
-                Text("No tags available to add")
-                    .foregroundColor(.gray)
-            } else {
-                HStack {
-                    Menu {
-                        ForEach(availableTags, id: \.tag) { tag in
-                            Button(tag.tag) {
-                                selectedTag = tag
-                            }
-                        }
-                    } label: {
-                        Text(selectedTag?.tag ?? "Select tag to add")
-                            .padding(8)
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(6)
-                    }
-                    
-                    Button("Add") {
-                        if let tag = selectedTag {
-                            addTag(tag)
-                            selectedTag = nil
-                        }
-                    }
-                    .disabled(selectedTag == nil)
-                    .padding(.leading)
-                }
-            }
-            
-            Spacer()
-        }
-        .padding()
-        .navigationTitle(restaurant.restaurant)
-    }
-    
-    private func addTag(_ tag: ItemTags) {
-        restaurant.tags.append(tag)
-        tag.items.append(restaurant)
-        
-        modelContext.insert(restaurant)
-        modelContext.insert(tag)
-    }
-    private func removeTag(_ tag: ItemTags) {
-        withAnimation {
-            if let index = restaurant.tags.firstIndex(of: tag) {
-                restaurant.tags.remove(at: index)
-            }
-            if let index = tag.items.firstIndex(of: restaurant) {
-                tag.items.remove(at: index)
-            }
-            
-            modelContext.insert(restaurant)
-            modelContext.insert(tag)
-        }
-    }
-}
-
 
 #Preview {
     ContentView()
