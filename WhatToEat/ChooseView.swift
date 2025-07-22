@@ -21,6 +21,7 @@ struct ChooseView: View {
     @State private var numberToChoose: Int = 1
     @State private var matchMode: MatchMode = .orMode
     @State private var selectedDays: UInt8 = 0b1111111
+    @State private var selectedHours: UInt32 = ((1 << 24) - 1)
     @State private var priceRange: (min: Int, max: Int) = (0, 0)
     @State private var minRating: UInt8 = 0
     @State private var showTagSelector = false
@@ -44,7 +45,8 @@ struct ChooseView: View {
                 }
                 MatchModeChooseView(matchMode: $matchMode)
                 PriceChooseView(priceRange: $priceRange)
-                AdvancedFilterSection(selectedDays: $selectedDays, minRating: $minRating)
+                RateChooseView(minRating: $minRating)
+                OpenTimeView(selectedDays: $selectedDays, selectedHours: $selectedHours)
                 NumberChooseView(numberToChoose: $numberToChoose, maxItems: items.count)
                 
                 let filtered = filterItems(items: items)
@@ -145,7 +147,8 @@ struct ChooseView: View {
         }
         
         return baseMatched.filter { item in
-            (item.openBit & selectedDays) != 0 &&
+            (item.weekBit & selectedDays) != 0 &&
+            (item.hourBit & selectedHours) != 0 &&
             item.lowestPrice >= priceRange.min &&
             item.highestPrice <= priceRange.max &&
             item.rating0to10 >= minRating
@@ -164,24 +167,5 @@ struct ChooseView: View {
 extension Array where Element: Hashable {
     func uniqued() -> [Element] {
         Array(Set(self))
-    }
-}
-
-struct AdvancedFilterSection: View {
-    @Binding var selectedDays: UInt8
-    @Binding var minRating: UInt8
-    @State private var isExpanded = false
-    
-    var body: some View {
-        DisclosureGroup("Advanced Filter", isExpanded: $isExpanded) {
-            VStack(spacing: 16) {
-                WeekdayChooseView(selectedDays: $selectedDays)
-                RateChooseView(minRating: $minRating)
-            }
-            .padding(.top, 10)
-        }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(8)
     }
 }

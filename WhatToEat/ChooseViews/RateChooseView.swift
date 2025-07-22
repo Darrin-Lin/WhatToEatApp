@@ -12,7 +12,7 @@ struct RateChooseView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Rating：\(minRating)★ ~ 10★").font(.headline)
+            Text("Rating：\(minRating) ★ ~ 10 ★").font(.headline)
             Slider(value: Binding(
                 get: { Double(minRating) },
                 set: { minRating = UInt8($0) }), in: 0...10, step: 1)

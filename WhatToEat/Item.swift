@@ -14,15 +14,17 @@ final class Item {
     @Relationship var tags: [ItemTags]
     @Attribute var lowestPrice: Int
     @Attribute var highestPrice: Int
-    @Attribute var openBit: UInt8
+    @Attribute var weekBit: UInt8
+    @Attribute var hourBit: UInt32
     @Attribute var rating0to10: UInt8
     
-    init(restaurant: String, tags: [ItemTags] = [], lowestPrice:Int, highestPrice:Int, openBit: UInt8, rating0to10: UInt8) {
+    init(restaurant: String, tags: [ItemTags] = [], lowestPrice:Int, highestPrice:Int, weekBit: UInt8, hourBit: UInt32, rating0to10: UInt8) {
         self.restaurant = restaurant
         self.tags = tags
         self.lowestPrice = lowestPrice
         self.highestPrice = highestPrice
-        self.openBit = openBit
+        self.weekBit = weekBit
+        self.hourBit = hourBit
         self.rating0to10 = rating0to10
     }
 }

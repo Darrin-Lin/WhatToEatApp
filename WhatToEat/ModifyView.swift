@@ -17,10 +17,11 @@ struct ModifyView: View {
     @State private var restaurant_name: String = ""
     @State private var price: (min:Int, max:Int) = (0,0)
     @State private var selectedDays: UInt8 = 0b1111111
+    @State private var selectedHours: UInt32 = ((1<<24) - 1)
     @State private var rating: UInt8 = 0
     @State private var selectedTags: Set<ItemTags> = []
     @State private var newTag: String = ""
-
+    
     var body: some View {
         NavigationSplitView {
             itemListView
@@ -28,7 +29,7 @@ struct ModifyView: View {
             Text("Select an item")
         }
     }
-
+    
     @ViewBuilder
     var itemListView: some View {
         List {
@@ -45,7 +46,7 @@ struct ModifyView: View {
             addTagSheet
         }
     }
-
+    
     @ViewBuilder
     var restaurantSection: some View {
         Section(header: Text("restaurants")) {
@@ -59,7 +60,7 @@ struct ModifyView: View {
             .onDelete(perform: deleteItems)
         }
     }
-
+    
     @ViewBuilder
     var tagSection: some View {
         Section(header: Text("tags")) {
@@ -79,7 +80,7 @@ struct ModifyView: View {
             .onDelete(perform: deleteTags)
         }
     }
-
+    
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
@@ -96,13 +97,14 @@ struct ModifyView: View {
             }
         }
     }
-
+    
     @ViewBuilder
     var addRestaurantSheet: some View {
         RestaurantSheetView(
             restaurantName: $restaurant_name,
             price: $price,
             selectedDays: $selectedDays,
+            selectedHours: $selectedHours,
             rating: $rating,
             selectedTags: $selectedTags,
             tagList: tag_list,
@@ -112,21 +114,22 @@ struct ModifyView: View {
                     tags: Array(selectedTags),
                     lowestPrice: price.min,
                     highestPrice: price.max,
-                    openBit: selectedDays,
+                    weekBit: selectedDays,
+                    hourBit: selectedHours,
                     rating0to10: UInt8(rating)
                 )
                 showingAddItemSheet = false
             }
         )
     }
-
+    
     @ViewBuilder
     var addTagSheet: some View {
         VStack {
             TextField("New tag", text: $newTag)
                 .padding()
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-
+            
             Button("Add Tag") {
                 addNewTag(tag: newTag)
                 newTag = ""
@@ -136,10 +139,10 @@ struct ModifyView: View {
         }
         .padding()
     }
-
-    private func addRestaurant(restaurant: String, tags: [ItemTags], lowestPrice:Int, highestPrice: Int, openBit: UInt8, rating0to10: UInt8 ) {
+    
+    private func addRestaurant(restaurant: String, tags: [ItemTags], lowestPrice:Int, highestPrice: Int, weekBit: UInt8, hourBit:UInt32, rating0to10: UInt8 ) {
         withAnimation {
-            let newItem = Item(restaurant: restaurant, tags: tags, lowestPrice:lowestPrice, highestPrice: highestPrice, openBit: openBit, rating0to10: rating0to10 )
+            let newItem = Item(restaurant: restaurant, tags: tags, lowestPrice:lowestPrice, highestPrice: highestPrice, weekBit: weekBit, hourBit: hourBit, rating0to10: rating0to10)
             modelContext.insert(newItem)
             for tag in tags {
                 tag.items.append(newItem)
@@ -148,7 +151,7 @@ struct ModifyView: View {
             selectedTags.removeAll()
         }
     }
-
+    
     private func addNewTag(tag: String) {
         withAnimation {
             if !tag_list.contains(where: { $0.tag == tag }) && !tag.isEmpty {
@@ -157,7 +160,7 @@ struct ModifyView: View {
             }
         }
     }
-
+    
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -172,7 +175,7 @@ struct ModifyView: View {
             }
         }
     }
-
+    
     private func deleteTags(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
