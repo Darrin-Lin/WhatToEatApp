@@ -64,6 +64,7 @@ struct ChooseView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
                 
+                SelectedView(matchedRestaurants: filtered.map { $0.restaurant })
                 Spacer()
             }
             .padding()
