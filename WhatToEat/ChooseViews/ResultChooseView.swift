@@ -9,7 +9,8 @@ import SwiftUI
 
 struct ResultChooseView: View {
     let results: [String]
-
+    let onClose: () -> Void
+    
     var body: some View {
         if results.isEmpty {
             Text("no result").foregroundColor(.red)
@@ -18,11 +19,20 @@ struct ResultChooseView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(results, id: \.self) { item in
                         Text("• \(item)")
+                            .font(.title)
                     }
                 }
             }
-            .frame(maxHeight: 200)
+            .frame(maxWidth: .infinity, maxHeight: 600)
             .padding()
         }
+        Button("Close") {
+            withAnimation { onClose() }
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.blue)
+        .foregroundColor(.white)
+        .cornerRadius(12)
     }
 }

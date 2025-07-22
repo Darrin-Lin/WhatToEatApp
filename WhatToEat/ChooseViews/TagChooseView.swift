@@ -29,7 +29,7 @@ struct TagChooseView: View {
                 }
             }
         }
-        .frame(height: 200)
+        .frame(height: 100)
     }
 
     private func toggleTag(_ tag: ItemTags) {
