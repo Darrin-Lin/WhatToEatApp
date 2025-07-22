@@ -138,6 +138,9 @@ struct ChooseView: View {
         }
     }
     private func filterItems(items: [Item]) -> [Item] {
+        if selectedTags.isEmpty {
+            return items
+        }
         let baseMatched: [Item]
         switch matchMode {
         case .orMode:
