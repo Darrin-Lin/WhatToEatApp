@@ -14,7 +14,10 @@ struct RestaurantDetailView: View {
     @Bindable var restaurant: Item
     @Query private var allTags: [ItemTags]
     @State private var selectedTag: ItemTags? = nil
-    
+    @State var selectedDays: UInt8 = 0
+    @State var selectedTime: UInt32 = 0
+    @State var rating: UInt8 = 0
+    @State var price: (min: Int, max: Int) = (0, 0)
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Tags for \(restaurant.restaurant):")
@@ -68,7 +71,12 @@ struct RestaurantDetailView: View {
                     .padding(.leading)
                 }
             }
-            
+            VStack{
+                PriceView(minPrice: $restaurant.lowestPrice,
+                          maxPrice: $restaurant.highestPrice)
+                RateView(minRating: $restaurant.rating0to10)
+                OpenTimeView(selectedDays: $restaurant.weekBit, selectedHours: $restaurant.hourBit)
+            }
             Spacer()
         }
         .padding()

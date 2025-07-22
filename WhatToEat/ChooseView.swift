@@ -46,8 +46,8 @@ struct ChooseView: View {
                 let filtered = filterItems(items: items)
                 let isDisabled = filtered.isEmpty
                 MatchModeChooseView(matchMode: $matchMode)
-                PriceChooseView(priceRange: $priceRange)
-                RateChooseView(minRating: $minRating)
+                PriceView(minPrice: $priceRange.min, maxPrice: $priceRange.max)
+                RateView(minRating: $minRating)
                 OpenTimeView(selectedDays: $selectedDays, selectedHours: $selectedHours)
                 NumberChooseView(numberToChoose: $numberToChoose, maxItems: filtered.count)
 

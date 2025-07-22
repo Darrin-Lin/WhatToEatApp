@@ -1,5 +1,5 @@
 //
-//  RateChooseView.swift
+//  RateView.swift
 //  WhatToEat
 //
 //  Created by Darrin Lin on 2025/7/22.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RateChooseView: View {
+struct RateView: View {
     @Binding var minRating: UInt8
     
     var body: some View {
