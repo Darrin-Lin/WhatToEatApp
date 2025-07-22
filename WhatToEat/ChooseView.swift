@@ -26,50 +26,13 @@ struct ChooseView: View {
             Text("Select tags")
                 .font(.title3)
                 .bold()
-            
-            // tags list
-            ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(tag_list) { tag in
-                        HStack {
-                            Text(tag.tag)
-                            Spacer()
-                            Image(systemName: selectedTags.contains(tag) ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(selectedTags.contains(tag) ? .blue : .gray)
-                        }
-                        .padding(.horizontal)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            toggleTag(tag)
-                        }
-                    }
-                }
-            }
-            .frame(height: 200)
-            
-            // AND / OR choose
-            VStack {
-                
-                Picker("logic", selection: $matchMode) {
-                    ForEach(MatchMode.allCases) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-            .padding(.horizontal)
-            
-            // number of restaurant choose
-            Stepper(value: $numberToChoose, in: 1...max(items.count, 1)) {
-                Text("Choose ").foregroundColor(.gray) +
-                Text("\(numberToChoose)")
-                    .bold()
-                    .foregroundColor(.blue) +
-                Text(" restaurants") .foregroundColor(.gray)
-            }
-            .padding(.horizontal)
-            
-            // choose button
+
+            TagChooseView(tagList: tag_list, selectedTags: $selectedTags)
+
+            MatchModeChooseView(matchMode: $matchMode)
+
+            NumberChooseView(numberToChoose: $numberToChoose, maxItems: items.count)
+
             Button("Choose") {
                 result = random_gen(num: numberToChoose)
             }
@@ -78,30 +41,13 @@ struct ChooseView: View {
             .background(Color.blue)
             .foregroundColor(.white)
             .cornerRadius(10)
-            
-            // result
-            if !result.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    ScrollView {
-                            VStack(alignment: .leading, spacing: 8) {
-                                ForEach(result, id: \.self) { item in
-                                    Text("• \(item)")
-                                }
-                            }
-                        }
-                        .frame(maxHeight: 200) 
-                }
-                .padding()
-            }
-            else {
-                Text("no result").foregroundColor(.red)
-            }
-            
+
+            ResultChooseView(results: result)
+
             Spacer()
         }
         .padding()
     }
-    
     private func toggleTag(_ tag: ItemTags) {
         if selectedTags.contains(tag) {
             selectedTags.remove(tag)
