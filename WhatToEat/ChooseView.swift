@@ -43,14 +43,13 @@ struct ChooseView: View {
                     Label("Select Tags", systemImage: "tag.fill")
                         .font(.headline)
                 }
+                let filtered = filterItems(items: items)
+                let isDisabled = filtered.isEmpty
                 MatchModeChooseView(matchMode: $matchMode)
                 PriceChooseView(priceRange: $priceRange)
                 RateChooseView(minRating: $minRating)
                 OpenTimeView(selectedDays: $selectedDays, selectedHours: $selectedHours)
-                NumberChooseView(numberToChoose: $numberToChoose, maxItems: items.count)
-                
-                let filtered = filterItems(items: items)
-                let isDisabled = filtered.isEmpty
+                NumberChooseView(numberToChoose: $numberToChoose, maxItems: filtered.count)
 
                 Button("Choose") {
                     let filtered = filterItems(items: items)
@@ -138,17 +137,18 @@ struct ChooseView: View {
         }
     }
     private func filterItems(items: [Item]) -> [Item] {
-        if selectedTags.isEmpty {
-            return items
-        }
         let baseMatched: [Item]
-        switch matchMode {
-        case .orMode:
-            baseMatched = selectedTags.flatMap { $0.items }.uniqued()
-        case .andMode:
-            baseMatched = allItemsHavingAllTags()
+        if !selectedTags.isEmpty {
+            switch matchMode {
+            case .orMode:
+                baseMatched = selectedTags.flatMap { $0.items }.uniqued()
+            case .andMode:
+                baseMatched = allItemsHavingAllTags()
+            }
         }
-        
+        else {
+            baseMatched = items
+        }
         return baseMatched.filter { item in
             (item.weekBit & selectedDays) != 0 &&
             (item.hourBit & selectedHours) != 0 &&
