@@ -138,6 +138,7 @@ struct ModifyView: View {
             .padding()
         }
         .padding()
+        .dismissKeyboardOnTap()
     }
     
     private func addRestaurant(restaurant: String, tags: [ItemTags], lowestPrice:Int, highestPrice: Int, weekBit: UInt8, hourBit:UInt32, rating0to10: UInt8 ) {

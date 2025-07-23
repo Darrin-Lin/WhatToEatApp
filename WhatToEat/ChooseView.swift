@@ -50,7 +50,7 @@ struct ChooseView: View {
                 RateView(minRating: $minRating)
                 OpenTimeView(selectedDays: $selectedDays, selectedHours: $selectedHours)
                 NumberChooseView(numberToChoose: $numberToChoose, maxItems: filtered.count)
-
+                
                 Button("Choose") {
                     let filtered = filterItems(items: items)
                     let restaurants = filtered.map(\.restaurant).shuffled()
@@ -128,7 +128,7 @@ struct ChooseView: View {
                     .zIndex(2)
             }
         }.animation(.easeInOut, value: showResult)
-        
+            .dismissKeyboardOnTap()
     }
     private func toggleTag(_ tag: ItemTags) {
         if selectedTags.contains(tag) {

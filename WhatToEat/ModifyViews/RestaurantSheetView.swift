@@ -39,7 +39,6 @@ struct RestaurantSheetView: View {
                 }
                 .padding(.horizontal)
                 
-               
                 OpenTimeView(selectedDays: $selectedDays, selectedHours: $selectedHours)
                 VStack {
                     Text("Rating：\(rating)★")
@@ -85,6 +84,6 @@ struct RestaurantSheetView: View {
                 .disabled(price.max < price.min)
             }
             .padding()
-        }
+        }.dismissKeyboardOnTap()
     }
 }
