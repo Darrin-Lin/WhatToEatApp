@@ -153,8 +153,7 @@ struct ChooseView: View {
         return baseMatched.filter { item in
             (item.weekBit & selectedDays) != 0 &&
             (item.hourBit & selectedHours) != 0 &&
-            item.lowestPrice >= priceRange.min &&
-            item.highestPrice <= priceRange.max &&
+            max(item.lowestPrice, priceRange.min) <= min(item.highestPrice, priceRange.max) &&
             item.rating0to10 >= minRating
         }
     }
