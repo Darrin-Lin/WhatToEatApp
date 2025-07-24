@@ -12,15 +12,19 @@ struct ModifyView: View {
     @Environment(\.modelContext) private var modelContext
     @Query var items: [Item]
     @Query private var tag_list: [ItemTags]
+    @Query private var area_list: [ItemArea]
     @State private var showingAddItemSheet = false
     @State private var showingAddTagSheet = false
+    @State private var showingAddAreaSheet = false
     @State private var restaurant_name: String = ""
     @State private var price: (min:Int, max:Int) = (0,0)
     @State private var selectedDays: UInt8 = 0b1111111
     @State private var selectedHours: UInt32 = ((1<<24) - 1)
     @State private var rating: UInt8 = 0
     @State private var selectedTags: Set<ItemTags> = []
+    @State private var selectedArea: Set<ItemArea> = []
     @State private var newTag: String = ""
+    @State private var newArea: String = ""
     
     var body: some View {
         NavigationSplitView {
@@ -33,8 +37,9 @@ struct ModifyView: View {
     @ViewBuilder
     var itemListView: some View {
         List {
-            restaurantSection
-            tagSection
+            ModifySections.restaurantSection(items: items, deleteItems: deleteItems)
+            ModifySections.tagSection(tagList: tag_list, deleteTags: deleteTags)
+            ModifySections.areaSection(areaList: area_list, deleteArea: deleteArea)
         }
         .toolbar {
             toolbarContent
@@ -45,41 +50,11 @@ struct ModifyView: View {
         .sheet(isPresented: $showingAddTagSheet) {
             addTagSheet
         }
-    }
-    
-    @ViewBuilder
-    var restaurantSection: some View {
-        Section(header: Text("restaurants")) {
-            ForEach(items) { item in
-                NavigationLink {
-                    RestaurantDetailView(restaurant: item)
-                } label: {
-                    Text(item.restaurant)
-                }
-            }
-            .onDelete(perform: deleteItems)
+        .sheet(isPresented: $showingAddAreaSheet) {
+            addAreaSheet
         }
     }
     
-    @ViewBuilder
-    var tagSection: some View {
-        Section(header: Text("tags")) {
-            ForEach(tag_list) { tag_item in
-                NavigationLink {
-                    Section(header: Text("used by \(tag_item.items.count) restaurants")) {
-                        List {
-                            ForEach(tag_item.items) { item in
-                                Text(item.restaurant)
-                            }
-                        }
-                    }
-                } label: {
-                    Text(tag_item.tag)
-                }
-            }
-            .onDelete(perform: deleteTags)
-        }
-    }
     
     @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
@@ -96,7 +71,13 @@ struct ModifyView: View {
                 Label("Add Tag", systemImage: "tag.fill")
             }
         }
+        ToolbarItem {
+            Button(action: { showingAddAreaSheet.toggle()}){
+                Label("Add Area", systemImage: "map.fill")
+            }
+        }
     }
+    
     
     @ViewBuilder
     var addRestaurantSheet: some View {
@@ -107,7 +88,9 @@ struct ModifyView: View {
             selectedHours: $selectedHours,
             rating: $rating,
             selectedTags: $selectedTags,
+            selectedAreas: $selectedArea,
             tagList: tag_list,
+            areaList: area_list,
             onAdd: {
                 addRestaurant(
                     restaurant: restaurant_name,
@@ -125,20 +108,25 @@ struct ModifyView: View {
     
     @ViewBuilder
     var addTagSheet: some View {
-        VStack {
-            TextField("New tag", text: $newTag)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            Button("Add Tag") {
+        TagSheetView(
+            newTag: $newTag,
+            onAdd: {
                 addNewTag(tag: newTag)
                 newTag = ""
                 showingAddTagSheet = false
             }
-            .padding()
-        }
-        .padding()
-        .dismissKeyboardOnTap()
+        )
+    }
+    
+    @ViewBuilder
+    var addAreaSheet: some View {
+        AreaSheetView(
+            newArea: $newArea,
+            onAdd: {
+                addNewArea(area: newArea)
+                newArea = ""
+                showingAddAreaSheet = false
+        })
     }
     
     private func addRestaurant(restaurant: String, tags: [ItemTags], lowestPrice:Int, highestPrice: Int, weekBit: UInt8, hourBit:UInt32, rating0to10: UInt8 ) {
@@ -162,6 +150,15 @@ struct ModifyView: View {
         }
     }
     
+    private func addNewArea(area: String) {
+        withAnimation {
+            if !area_list.contains(where: { $0.area == area }) && !area.isEmpty {
+                let newArea = ItemArea(area: area)
+                modelContext.insert(newArea)
+            }
+        }
+    }
+    
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -173,6 +170,21 @@ struct ModifyView: View {
                     }
                 }
                 modelContext.delete(itemToDelete)
+            }
+        }
+    }
+    
+    private func deleteArea(offsets: IndexSet) {
+        withAnimation {
+            for index in offsets {
+                let areaToDelete = area_list[index]
+                for item in items {
+                    if let idx = item.area.firstIndex(of: areaToDelete) {
+                        item.area.remove(at: idx)
+                        modelContext.insert(item)
+                    }
+                }
+                modelContext.delete(areaToDelete)
             }
         }
     }

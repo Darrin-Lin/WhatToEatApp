@@ -15,8 +15,10 @@ enum MatchMode: String, CaseIterable, Identifiable {
 }
 struct ChooseView: View {
     @Query private var tag_list: [ItemTags]
+    @Query private var area_list: [ItemArea]
     @Query private var items: [Item]
     @State private var selectedTags: Set<ItemTags> = []
+    @State private var selectedAreas: Set<ItemArea> = []
     @State private var result: [String] = []
     @State private var numberToChoose: Int = 1
     @State private var matchMode: MatchMode = .orMode
@@ -25,6 +27,7 @@ struct ChooseView: View {
     @State private var priceRange: (min: Int, max: Int) = (0, 0)
     @State private var minRating: UInt8 = 0
     @State private var showTagSelector = false
+    @State private var showAreaSelector = false
     @State private var showResult = false
     
     
@@ -41,6 +44,14 @@ struct ChooseView: View {
                     }
                 }) {
                     Label("Select Tags", systemImage: "tag.fill")
+                        .font(.headline)
+                }
+                Button(action: {
+                    withAnimation(.spring()) {
+                        showAreaSelector = true
+                    }
+                }) {
+                    Label("Select Areas", systemImage: "map.fill")
                         .font(.headline)
                 }
                 let filtered = filterItems(items: items)
@@ -104,6 +115,42 @@ struct ChooseView: View {
                 }
                 .zIndex(1)
             }
+            if showAreaSelector {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                
+                VStack {
+                    Spacer()
+                    VStack(spacing: 20) {
+                        Text("Select Areas")
+                            .font(.title2)
+                            .bold()
+                        
+                        ScrollView {
+                            AreaChooseView(areaList: area_list, selectedAreas: $selectedAreas)
+                        }
+                        .frame(maxHeight: 400)
+                        
+                        Button("Finish") {
+                            withAnimation {
+                                showAreaSelector = false
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(20)
+                    .padding()
+                    .transition(.move(edge: .bottom))
+                }
+                .zIndex(1)
+            }
             if showResult {
                 Color.black.opacity(0.4)
                     .ignoresSafeArea()
@@ -128,7 +175,7 @@ struct ChooseView: View {
                     .zIndex(2)
             }
         }.animation(.easeInOut, value: showResult)
-            .dismissKeyboardOnTap()
+        .dismissKeyboardOnTap()
     }
     private func toggleTag(_ tag: ItemTags) {
         if selectedTags.contains(tag) {
@@ -138,7 +185,7 @@ struct ChooseView: View {
         }
     }
     private func filterItems(items: [Item]) -> [Item] {
-        let baseMatched: [Item]
+        var baseMatched: [Item]
         if !selectedTags.isEmpty {
             switch matchMode {
             case .orMode:
@@ -149,6 +196,9 @@ struct ChooseView: View {
         }
         else {
             baseMatched = items
+        }
+        if !selectedAreas.isEmpty {
+            baseMatched = selectedAreas.flatMap { $0.items }.uniqued()
         }
         return baseMatched.filter { item in
             (item.weekBit & selectedDays) != 0 &&

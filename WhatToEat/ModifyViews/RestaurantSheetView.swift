@@ -14,8 +14,10 @@ struct RestaurantSheetView: View {
     @Binding var selectedHours: UInt32
     @Binding var rating: UInt8
     @Binding var selectedTags: Set<ItemTags>
+    @Binding var selectedAreas: Set<ItemArea>
     @State private var showTimeSelector = false
     let tagList: [ItemTags]
+    let areaList: [ItemArea]
     let onAdd: () -> Void
     
     var body: some View {
@@ -51,31 +53,18 @@ struct RestaurantSheetView: View {
                 
                 Text("Select tags").font(.headline)
                 ScrollView {
-                    VStack {
-                        ForEach(tagList) { tag in
-                            HStack {
-                                Text(tag.tag)
-                                Spacer()
-                                if selectedTags.contains(tag) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.blue)
-                                } else {
-                                    Image(systemName: "circle")
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                if selectedTags.contains(tag) {
-                                    selectedTags.remove(tag)
-                                } else {
-                                    selectedTags.insert(tag)
-                                }
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 1000)
+                    TagChooseView(tagList: tagList, selectedTags: $selectedTags)
+                    
                 }
                 .padding()
+                .frame(maxHeight: 600)
+                
+                Text("Select Area").font(.headline)
+                ScrollView {
+                    AreaChooseView(areaList: areaList, selectedAreas: $selectedAreas)
+                }
+                .padding()
+                .frame(maxHeight: 600)
                 
                 Button("Add Restaurant") {
                     onAdd()
