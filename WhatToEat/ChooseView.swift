@@ -33,52 +33,52 @@ struct ChooseView: View {
     
     var body: some View {
         ZStack {
-            VStack(spacing: 20) {
-                Text("Select tags")
-                    .font(.title3)
-                    .bold()
-                
-                Button(action: {
-                    withAnimation(.spring()) {
-                        showTagSelector = true
+            ScrollView{
+                VStack(spacing: 20) {
+                    Text("Select tags")
+                        .font(.title3)
+                        .bold()
+                    Button(action: {
+                        withAnimation(.spring()) {
+                            showTagSelector = true
+                        }
+                    }) {
+                        Label("Select Tags", systemImage: "tag.fill")
+                            .font(.headline)
                     }
-                }) {
-                    Label("Select Tags", systemImage: "tag.fill")
-                        .font(.headline)
-                }
-                Button(action: {
-                    withAnimation(.spring()) {
-                        showAreaSelector = true
+                    Button(action: {
+                        withAnimation(.spring()) {
+                            showAreaSelector = true
+                        }
+                    }) {
+                        Label("Select Areas", systemImage: "map.fill")
+                            .font(.headline)
                     }
-                }) {
-                    Label("Select Areas", systemImage: "map.fill")
-                        .font(.headline)
-                }
-                let filtered = filterItems(items: items)
-                let isDisabled = filtered.isEmpty
-                MatchModeChooseView(matchMode: $matchMode)
-                PriceView(minPrice: $priceRange.min, maxPrice: $priceRange.max)
-                RateView(minRating: $minRating)
-                OpenTimeView(selectedDays: $selectedDays, selectedHours: $selectedHours)
-                NumberChooseView(numberToChoose: $numberToChoose, maxItems: filtered.count)
-                
-                Button("Choose") {
                     let filtered = filterItems(items: items)
-                    let restaurants = filtered.map(\.restaurant).shuffled()
-                    result = Array(restaurants.prefix(numberToChoose))
-                    showResult = true
+                    let isDisabled = filtered.isEmpty
+                    MatchModeChooseView(matchMode: $matchMode)
+                    PriceView(minPrice: $priceRange.min, maxPrice: $priceRange.max)
+                    RateView(minRating: $minRating)
+                    OpenTimeView(selectedDays: $selectedDays, selectedHours: $selectedHours)
+                    NumberChooseView(numberToChoose: $numberToChoose, maxItems: filtered.count)
+                    Button("Choose") {
+                        let filtered = filterItems(items: items)
+                        let restaurants = filtered.map(\.restaurant).shuffled()
+                        result = Array(restaurants.prefix(numberToChoose))
+                        showResult = true
+                    }
+                    .disabled(isDisabled)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(isDisabled ? Color.gray : Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                    SelectedView(matchedRestaurants: filtered.map { $0.restaurant })
+                    Spacer()
                 }
-                .disabled(isDisabled)
                 .padding()
-                .frame(maxWidth: .infinity)
-                .background(isDisabled ? Color.gray : Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                SelectedView(matchedRestaurants: filtered.map { $0.restaurant })
-                Spacer()
-            }
-            .padding()
+            }.padding()
             if showTagSelector {
                 Color.black.opacity(0.4)
                     .ignoresSafeArea()
@@ -90,7 +90,6 @@ struct ChooseView: View {
                         Text("Select Tags")
                             .font(.title2)
                             .bold()
-                        
                         ScrollView {
                             TagChooseView(tagList: tag_list, selectedTags: $selectedTags)
                         }
@@ -126,7 +125,6 @@ struct ChooseView: View {
                         Text("Select Areas")
                             .font(.title2)
                             .bold()
-                        
                         ScrollView {
                             AreaChooseView(areaList: area_list, selectedAreas: $selectedAreas)
                         }
@@ -175,7 +173,7 @@ struct ChooseView: View {
                     .zIndex(2)
             }
         }.animation(.easeInOut, value: showResult)
-        .dismissKeyboardOnTap()
+            .dismissKeyboardOnTap()
     }
     private func toggleTag(_ tag: ItemTags) {
         if selectedTags.contains(tag) {
